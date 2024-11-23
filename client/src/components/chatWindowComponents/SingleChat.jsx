@@ -10,6 +10,7 @@ import io from 'socket.io-client'
 import { useSelector } from 'react-redux';
 import animationData from '../../animation/typingAnimation.json';
 import { useTheme } from '../../context/ThemeContext';
+import toast from 'react-hot-toast';
 
 const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
 var socket, selectedChatCompare;

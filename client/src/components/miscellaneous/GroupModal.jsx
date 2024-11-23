@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { CiUser } from 'react-icons/ci';
 
 const GroupModal = ({onClose}) => {
-  const backendURL = 'https://chat-app-mern-backend-0e7i.onrender.com/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const {isDarkMode} = useTheme();
   const [groupName,setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);

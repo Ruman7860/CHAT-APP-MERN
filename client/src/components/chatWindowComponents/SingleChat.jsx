@@ -13,12 +13,11 @@ import Spinner from '../../animation/Spinner.json';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
-
-const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
+const ENDPOINT = "http://localhost:3000"; // backend endpoint
 var socket, selectedChatCompare;
 
 const SingleChat = ({fetchAgain, setFetchAgain}) => {
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = 'http://localhost:3000/api/v1/';
   const {selectedChat,notifications,setNotifications} = useChat();
   const [messages,setMessages] = useState([]);
   const [newMessage,setNewMessage] = useState('');
@@ -40,7 +39,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     },
   };
 
-    const defaultOptionsSpinner = {
+  const defaultOptionsSpinner = {
     loop: true,
     autoplay: true,
     animationData: Spinner,
@@ -53,12 +52,14 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (newMessage === '' && !image) {
-        toast.error("Please type some message or select an image");
-        return;
-    }
-    socket.emit('stop-typing',selectedChat._id);
 
+    if (!newMessage.trim() && !image && !file) {
+      toast.error("Please type a message or select an image/file");
+      return;
+    }
+
+    socket.emit('stop-typing',selectedChat._id);
+    
     const formData = new FormData();
     formData.append('content',newMessage);
     formData.append('chatId',selectedChat._id);
@@ -89,7 +90,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
       // setMessages([...messages,res.data.data]);
       setMessages((prevMessages) => [...prevMessages, res.data.data]);
     } catch (error) {
-      console.log("error :",error);
+      console.log("error :",error.message);
       return;
     }
   }
@@ -102,17 +103,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     try {
       const res = await axios.get(`${backendURL}messages/${selectedChat._id}`, { withCredentials: true });
         
-      // setMessages(res.data.data);
-      setMessages((prevMessages) => {
-        const fetchedMessages = res.data.data;
-        const uniqueMessages = [
-          ...prevMessages.filter(
-            (msg) => !fetchedMessages.some((fetched) => fetched._id === msg._id)
-          ),
-          ...fetchedMessages,
-        ];
-        return uniqueMessages;
-      });
+      setMessages(res.data.data);
       // loggedIn user room join or chat krne ke lia
       socket.emit('join-chat',selectedChat._id);
     } catch (error) {
@@ -129,12 +120,23 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     socket.on('stop-typing',() => setIsTyping(false));
   },[])
 
-   useEffect(() => {
+  useEffect(() => {
+    // socket.on("message-recieved", (newMessageRecieved) => {
+    //   if (
+    //     !selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
+    //     if (!notifications.includes(newMessageRecieved)) {
+    //       setNotifications([newMessageRecieved, ...notifications]);
+    //       setFetchAgain(!fetchAgain);
+    //     }
+    //   } else {
+    //     setMessages([...messages, newMessageRecieved]);
+    //     setFetchAgain(!fetchAgain);
+    //     fetchMessages();
+    //   }
+    // });
+
     socket.on("message-recieved", (newMessageRecieved) => {
-      if (
-        !selectedChatCompare ||
-        selectedChatCompare._id !== newMessageRecieved.chat._id
-      ) {
+      if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
         if (!notifications.some((notif) => notif._id === newMessageRecieved._id)) {
           setNotifications([newMessageRecieved, ...notifications]);
           setFetchAgain(!fetchAgain);
@@ -149,7 +151,29 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
         setFetchAgain(!fetchAgain);
       }
     });
-  }, [notifications, fetchAgain, selectedChatCompare]);
+  },[])
+
+  // useEffect(() => {
+  //   socket.on("message-recieved", (newMessageRecieved) => {
+  //     if (
+  //       !selectedChatCompare ||
+  //       selectedChatCompare._id !== newMessageRecieved.chat._id
+  //     ) {
+  //       if (!notifications.some((notif) => notif._id === newMessageRecieved._id)) {
+  //         setNotifications([newMessageRecieved, ...notifications]);
+  //         setFetchAgain(!fetchAgain);
+  //       }
+  //     } else {
+  //       setMessages((prevMessages) => {
+  //         if (!prevMessages.some((msg) => msg._id === newMessageRecieved._id)) {
+  //           return [...prevMessages, newMessageRecieved];
+  //         }
+  //         return prevMessages;
+  //       });
+  //       setFetchAgain(!fetchAgain);
+  //     }
+  //   });
+  // }, [notifications, fetchAgain, selectedChatCompare]);
 
   useEffect(() => {
     fetchMessages();
@@ -192,53 +216,55 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
   return (
     <>
-      <>
-    {!loading ? ( 
-      selectedChat ? (
-        <div className='flex flex-col h-screen'>
-          <ChatHeader fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} fetchMessages={fetchMessages} />
+      {!loading ? (
+        selectedChat ? (
+          <div className='flex flex-col h-screen'>
+            <ChatHeader fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} fetchMessages={fetchMessages} />
 
-          {/* Main Chat Box */}
-          <ScrollableFeed className='flex-1'>
-            <Messages messages={messages} setMessages={setMessages} isTyping={isTyping} />
-          </ScrollableFeed>
+            {/* Main Chat Box */}
+            <ScrollableFeed className='flex-1'>
+              <Messages messages={messages} setMessages={setMessages}/>
+            </ScrollableFeed>
+            {isTyping && (
+              <div className="mt-auto mb-0">
+                <Lottie
+                  options={defaultOptions}
+                  width={70}
+                  style={{ marginBottom: 0, marginLeft: 0 }}
+                />
+              </div>
+            )}
 
-          {isTyping && (
-            <div className="mt-auto mb-0">
-              <Lottie options={defaultOptions} width={70} style={{ marginBottom: 0, marginLeft: 0 }} />
-            </div>
-          )}
-
-          {/* MessageInput */}
-          <MessageInput 
-            sendMessage={sendMessage} 
-            newMessage={newMessage} 
-            typingHandler={typingHandler} 
-            setNewMessage={setNewMessage}
-            setImage={setImage}
-            image={image}
-            imagePreview={imagePreview}
-            setImagePreview={setImagePreview}
-            file={file}
-            setFile={setFile}
+            {/* MessageInput */}
+            <MessageInput
+              sendMessage={sendMessage}
+              newMessage={newMessage}
+              typingHandler={typingHandler}
+              setNewMessage={setNewMessage}
+              setImage={setImage}
+              image={image}
+              imagePreview={imagePreview}
+              setImagePreview={setImagePreview}
+              file={file}
+              setFile={setFile}
+            />
+          </div>
+        ) : (
+          <div className='flex justify-center items-center h-screen'>
+            <p className='text-xl'>Click on user to start chatting </p>
+          </div>
+        )
+      ) : (
+        <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
+          <Lottie
+            options={defaultOptionsSpinner}
+            width={100}
+            height={100}
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           />
         </div>
-      ) : (
-        <div className='flex justify-center items-center h-screen'>
-          <p className='text-xl'>Click on user to start chatting</p>
-        </div>
-      )
-    ) : (
-      <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
-        <Lottie
-          options={defaultOptionsSpinner}
-          width={100}
-          height={100}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-        />
-      </div>
-    )}
-  </>
+      )}
+    </>
   )
 }
 

@@ -36,6 +36,10 @@ export const sendMessage = async (req,res,next) => {
     if (!chatId) {
         return next(errorHandler(400,"Invalid data passed into request"));
     }
+    
+    if (!content && !req.file) {
+        return next(errorHandler(400, "Content or image must be provided"));
+    }
 
     let imageURL = '';
     let fileURL = '';

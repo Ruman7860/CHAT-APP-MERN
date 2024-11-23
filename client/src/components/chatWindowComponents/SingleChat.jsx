@@ -128,20 +128,6 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     socket.on('stop-typing',() => setIsTyping(false));
   },[])
 
-  // useEffect(() => {
-  //   socket.on("message-recieved", (newMessageRecieved) => {
-  //     if (
-  //       !selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
-  //       // if (!notifications.includes(newMessageRecieved)) {
-  //       //   setNotifications([newMessageRecieved, ...notifications]);
-  //       //   setFetchAgain(!fetchAgain);
-  //       // }
-  //     } else {
-  //       setMessages([...messages, newMessageRecieved]);
-  //     }
-  //   });
-  // },[])
-
    useEffect(() => {
     socket.on("message-recieved", (newMessageRecieved) => {
       if (
@@ -205,8 +191,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
   return (
     <>
-      !loading ? 
-      ({ selectedChat ?
+      { !loading ? ( selectedChat ?
             (<div className='flex flex-col h-screen'> 
                 <ChatHeader fetchAgain = {fetchAgain} setFetchAgain = {setFetchAgain} fetchMessages = {fetchMessages} />
 
@@ -244,7 +229,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
               <p className='text-xl'>Click on user to start chatting </p>
             </div>
             )
-        }):
+        ):
         (
           <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
           <Lottie
@@ -254,7 +239,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
             />
         </div>
-        )
+        )}
     </>
   )
 }

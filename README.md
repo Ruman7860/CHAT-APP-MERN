@@ -29,7 +29,7 @@ This is a **real-time chat application** built using the MERN stack (MongoDB, Ex
 
 - **Deployment**:
   - Deployed on Render (Backend)
-  - Deployed on Vercel (Frontend)
+  - Deployed on Render (Frontend)
 
 ## Live Demo
 

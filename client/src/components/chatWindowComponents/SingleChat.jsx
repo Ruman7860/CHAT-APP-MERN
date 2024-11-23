@@ -68,7 +68,8 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
       setFile(null);
       setImagePreview(null); // Clear the preview after sending
       socket.emit('new-message',res.data.data);
-      setMessages([...messages,res.data.data]);
+      // setMessages([...messages,res.data.data]);
+      setMessages((prevMessages) => [...prevMessages, res.data.data]);
     } catch (error) {
       console.log("error :",error);
       return;
@@ -83,7 +84,17 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     try {
       const res = await axios.get(`${backendURL}messages/${selectedChat._id}`, { withCredentials: true });
         
-      setMessages(res.data.data);
+      // setMessages(res.data.data);
+      setMessages((prevMessages) => {
+        const fetchedMessages = res.data.data;
+        const uniqueMessages = [
+          ...prevMessages.filter(
+            (msg) => !fetchedMessages.some((fetched) => fetched._id === msg._id)
+          ),
+          ...fetchedMessages,
+        ];
+        return uniqueMessages;
+      });
       // loggedIn user room join or chat krne ke lia
       socket.emit('join-chat',selectedChat._id);
     } catch (error) {
@@ -100,19 +111,41 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     socket.on('stop-typing',() => setIsTyping(false));
   },[])
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   socket.on("message-recieved", (newMessageRecieved) => {
+  //     if (
+  //       !selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
+  //       // if (!notifications.includes(newMessageRecieved)) {
+  //       //   setNotifications([newMessageRecieved, ...notifications]);
+  //       //   setFetchAgain(!fetchAgain);
+  //       // }
+  //     } else {
+  //       setMessages([...messages, newMessageRecieved]);
+  //     }
+  //   });
+  // },[])
+
+   useEffect(() => {
     socket.on("message-recieved", (newMessageRecieved) => {
       if (
-        !selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
-        // if (!notifications.includes(newMessageRecieved)) {
-        //   setNotifications([newMessageRecieved, ...notifications]);
-        //   setFetchAgain(!fetchAgain);
-        // }
+        !selectedChatCompare ||
+        selectedChatCompare._id !== newMessageRecieved.chat._id
+      ) {
+        if (!notifications.some((notif) => notif._id === newMessageRecieved._id)) {
+          setNotifications([newMessageRecieved, ...notifications]);
+          setFetchAgain(!fetchAgain);
+        }
       } else {
-        setMessages([...messages, newMessageRecieved]);
+        setMessages((prevMessages) => {
+          if (!prevMessages.some((msg) => msg._id === newMessageRecieved._id)) {
+            return [...prevMessages, newMessageRecieved];
+          }
+          return prevMessages;
+        });
+        setFetchAgain(!fetchAgain);
       }
     });
-  },[])
+  }, [notifications, fetchAgain, selectedChatCompare]);
 
   useEffect(() => {
     fetchMessages();

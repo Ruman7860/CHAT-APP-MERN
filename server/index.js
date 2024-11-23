@@ -9,7 +9,7 @@ import messageRouter from './routes/message.route.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-const frontendURL = 'http://localhost:5173';
+const frontendURL = "https://chat-app-mern-frontend-yn0w.onrender.com";
 
 // Load environment variables
 dotenv.config();

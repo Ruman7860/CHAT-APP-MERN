@@ -9,7 +9,7 @@ import axios from 'axios';
 import io from 'socket.io-client'
 import { useSelector } from 'react-redux';
 import animationData from '../../animation/typingAnimation.json';
-import Spinner from '../../animation/typingAnimation.json';
+import Spinner from '../../animation/Spinner.json';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -206,7 +206,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
   return (
     <>
       !loading ? 
-      (        { selectedChat ?
+      ({ selectedChat ?
             (<div className='flex flex-col h-screen'> 
                 <ChatHeader fetchAgain = {fetchAgain} setFetchAgain = {setFetchAgain} fetchMessages = {fetchMessages} />
 

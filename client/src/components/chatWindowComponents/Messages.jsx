@@ -9,7 +9,7 @@ import ImagePreview from '../miscellaneous/ImagePreview';
 import { MdDelete } from 'react-icons/md';
 
 const Messages = ({messages,setMessages}) => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const {id} = useSelector((state) => state.user);
   const {isDarkMode} = useTheme();
   const [menuData, setMenuData] = useState({ isVisible: false, image: '',messageId:'', position: { x: 0, y: 0 }});

@@ -9,6 +9,7 @@ import axios from 'axios';
 import io from 'socket.io-client'
 import { useSelector } from 'react-redux';
 import animationData from '../../animation/typingAnimation.json';
+import Spinner from '../../animation/typingAnimation.json';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -26,12 +27,22 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
   const [image,setImage] = useState(null);
   const [imagePreview,setImagePreview] = useState(null);
   const [file,setFile] = useState(null);
+  const [loading,setLoading] = useState(false);
   const {id} = useSelector((state) => state.user);
 
   const defaultOptions = {
     loop: true,
     autoplay: true,
     animationData: animationData,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
+
+    const defaultOptionsSpinner = {
+    loop: true,
+    autoplay: true,
+    animationData: Spinner,
     rendererSettings: {
       preserveAspectRatio: "xMidYMid slice",
     },
@@ -51,7 +62,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     formData.append('content',newMessage);
     formData.append('chatId',selectedChat._id);
     if(image){
-      console.log(image)
+      setLoading(true);
       formData.append('file',image);
     }
     if(file){
@@ -68,6 +79,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
           headers: {'Content-Type': 'multipart/form-data',},
         }
       );
+      setLoading(false);
       setNewMessage('');
       setImage(null);
       setFile(null);
@@ -193,7 +205,8 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
   return (
     <>
-        { selectedChat ?
+      !loading ? 
+      (        { selectedChat ?
             (<div className='flex flex-col h-screen'> 
                 <ChatHeader fetchAgain = {fetchAgain} setFetchAgain = {setFetchAgain} fetchMessages = {fetchMessages} />
 
@@ -231,7 +244,17 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
               <p className='text-xl'>Click on user to start chatting </p>
             </div>
             )
-        }
+        }):
+        (
+          <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
+          <Lottie
+            options={defaultOptionsSpinner}
+            width={100}
+            height={100}
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            />
+        </div>
+        )
     </>
   )
 }

@@ -63,7 +63,7 @@ export const sendMessage = async (req,res,next) => {
     try {
         var newMessage = {
             sender: id,
-            content: content,
+            content: content || undefined, // Ensure content is only added if it's not empty
             chat: chatId,
             image: imageURL || undefined,
             file: fileURL || undefined,

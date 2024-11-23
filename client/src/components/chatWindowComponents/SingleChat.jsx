@@ -42,7 +42,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     e.preventDefault();
     socket.emit('stop-typing',selectedChat._id);
 
-    if (!newMessage.trim() && !image) {
+    if (newMessage === '' && !image) {
         toast.error("Please type some message or select an image");
         return;
     }

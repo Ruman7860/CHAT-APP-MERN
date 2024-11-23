@@ -4,7 +4,7 @@ import { IoSend } from 'react-icons/io5';
 import axios from 'axios';
 import { useChat } from '../../context/ChatContext';
 import EmojiPicker from 'emoji-picker-react';
-import { FaSmile } from 'react-icons/fa';
+import { FaSmile, FaTimes } from 'react-icons/fa';
 import { FaImage } from "react-icons/fa";
 import { FaFile } from "react-icons/fa6";
 import Tooltip from '../../utils/Tooltip';
@@ -14,6 +14,7 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
   const [showEmojiPicker,setShowEmojiPicker] = useState(false);
   const photo = useRef(null);
   const fileRef = useRef(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
 
   const toggleEmogiPicker = () => {
     setShowEmojiPicker(!showEmojiPicker);
@@ -36,6 +37,7 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
     setImage(e.target.files[0]);
     console.log(e.target.files[0]);
     setImagePreview(URL.createObjectURL(e.target.files[0]));
+    setImagePreviewUrl(URL.createObjectURL(e.target.files[0]));
   }
 
   const handleFileChange = (e) => {
@@ -104,6 +106,44 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
       >
         <IoSend className='text-xl'/>
       </button>
+
+      {imagePreviewUrl && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 flex justify-center items-center"
+        >
+          <div className={`relative bg-black p-4 rounded-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <img
+              src={imagePreviewUrl}
+              alt="Preview"
+              className="max-w-full max-h-80 object-cover rounded-xl p-1 mt-2"
+            />
+            <div className="absolute top-1 right-1 flex">
+              <button
+                onClick={() => setImagePreviewUrl(null)} // Close modal
+                className="text-red-600 text-xl font-bold"
+              >
+                <FaTimes/>
+              </button>
+            </div>
+            <div className="flex justify-between items-center mt-3 mb-0 p-2">
+              <button
+                type="button"
+                onClick={() => setImagePreviewUrl(null)} // Remove the image preview
+                className="text-red-600 text-lg"
+              >
+                Remove
+              </button>
+              <button
+                type="button"
+                onClick={sendMessage} // Send the message with the image
+                className="text-blue-600 text-lg"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   )
 }

@@ -13,7 +13,7 @@ import spinnerAnimation from '../animation/Spinner.json';
 
 const Signup = () => {
 
-  const backendURL = 'https://chat-app-mern-backend-0e7i.onrender.com/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
 
   const defaultOptions = {
     loop: true,

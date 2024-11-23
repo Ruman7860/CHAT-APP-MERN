@@ -40,6 +40,10 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
   const sendMessage = async (e) => {
     e.preventDefault();
+    if(!newMessage && !image){
+      toast.error("Please type some message or select image");
+      return;
+    }
     socket.emit('stop-typing',selectedChat._id);
 
     const formData = new FormData();

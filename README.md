@@ -44,6 +44,8 @@ Try the live version of the application:
 git clone https://github.com/Ruman7860/CHAT-APP-MERN.git
 ```
 
+#### Backend
+
 ### 2. Install dependencies
 After cloning the repository, navigate to the `server` directory where the backend files are located:
 

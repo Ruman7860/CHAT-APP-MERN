@@ -6,7 +6,7 @@ import { useChat } from '../../context/ChatContext';
 import UserSearch from '../miscellaneous/UserSearch';
 
 const Search = () => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const {isDarkMode} = useTheme();
   const [searchTerm,setSearchTerm] = useState('');
   const [searchResult,setSearchResult] = useState([]);

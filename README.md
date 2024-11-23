@@ -41,4 +41,42 @@ Try the live version of the application:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/chat-app-mern-stack.git
+git clone https://github.com/Ruman7860/CHAT-APP-MERN.git
+```
+
+### 2. Install dependencies
+After cloning the repository, navigate to the `server` directory where the backend files are located:
+
+```bash
+cd server
+```
+
+
+### 3. Install dependencies:
+```bash
+npm install
+```
+
+### 4. Install dependencies:
+```bash
+npm install
+```
+
+### 5. Install dependencies:
+```bash
+npm install
+```
+
+
+### 6. Install dependencies:
+```bash
+npm install
+```
+
+### 7. Install dependencies:
+```bash
+npm install
+```
+
+
+

@@ -35,6 +35,10 @@ mongoose.connect(process.env.CONN_STR)
     console.error("MongoDB connection error", err);
 });
 
+app.get('/',(req,res)=>{
+    res.send("Heloo from Server");
+});
+
 // Import Routes
 app.use('/api/v1/auth',authRouter);
 app.use('/api/v1/chats', chatRouter);

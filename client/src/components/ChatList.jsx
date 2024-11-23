@@ -11,7 +11,7 @@ import { useChat } from '../context/ChatContext.jsx';
 import toast from 'react-hot-toast';
 
 const ChatList = ({ fetchAgain}) => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {isDarkMode} = useTheme();

@@ -191,56 +191,53 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
   return (
     <>
-      { !loading ? ( selectedChat ?
-            (<div className='flex flex-col h-screen'> 
-                <ChatHeader fetchAgain = {fetchAgain} setFetchAgain = {setFetchAgain} fetchMessages = {fetchMessages} />
+      <>
+    {!loading ? ( 
+      selectedChat ? (
+        <div className='flex flex-col h-screen'>
+          <ChatHeader fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} fetchMessages={fetchMessages} />
 
-                {/* Main Chat Box */}
-                <ScrollableFeed className='flex-1'>
-                    <Messages messages = {messages} setMessages={setMessages} isTyping={isTyping} />
-                </ScrollableFeed>
-                {isTyping && (
-                  <div className="mt-auto mb-0">
-                    {/* <div className='mb-0'> */}
-                      <Lottie
-                        options={defaultOptions} 
-                        width={70}
-                        style={{ marginBottom: 0, marginLeft: 0 }}
-                      />
-                    {/* </div> */}
-                  </div>
-                )}
+          {/* Main Chat Box */}
+          <ScrollableFeed className='flex-1'>
+            <Messages messages={messages} setMessages={setMessages} isTyping={isTyping} />
+          </ScrollableFeed>
 
-                {/* MessageInput */}
-                <MessageInput 
-                  sendMessage ={sendMessage} 
-                  newMessage={newMessage} 
-                  typingHandler={typingHandler} 
-                  setNewMessage = {setNewMessage}
-                  setImage = {setImage}
-                  image = {image}
-                  imagePreview = {imagePreview}
-                  setImagePreview = {setImagePreview}
-                  file = {file}
-                  setFile = {setFile}
-                />
-            </div>) :(
-            <div className='flex justify-center items-center h-screen'>
-              <p className='text-xl'>Click on user to start chatting </p>
+          {isTyping && (
+            <div className="mt-auto mb-0">
+              <Lottie options={defaultOptions} width={70} style={{ marginBottom: 0, marginLeft: 0 }} />
             </div>
-            )
-        ):
-        (
-          <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
-          <Lottie
-            options={defaultOptionsSpinner}
-            width={100}
-            height={100}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            />
+          )}
+
+          {/* MessageInput */}
+          <MessageInput 
+            sendMessage={sendMessage} 
+            newMessage={newMessage} 
+            typingHandler={typingHandler} 
+            setNewMessage={setNewMessage}
+            setImage={setImage}
+            image={image}
+            imagePreview={imagePreview}
+            setImagePreview={setImagePreview}
+            file={file}
+            setFile={setFile}
+          />
         </div>
-        )}
-    </>
+      ) : (
+        <div className='flex justify-center items-center h-screen'>
+          <p className='text-xl'>Click on user to start chatting</p>
+        </div>
+      )
+    ) : (
+      <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
+        <Lottie
+          options={defaultOptionsSpinner}
+          width={100}
+          height={100}
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+        />
+      </div>
+    )}
+  </>
   )
 }
 

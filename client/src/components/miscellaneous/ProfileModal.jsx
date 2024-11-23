@@ -9,7 +9,7 @@ import spinnerAnimation from '../../animation/Spinner.json';
 
 
 const ProfileModal = ({onClose}) => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = 'https://chat-app-mern-backend-0e7i.onrender.com/api/v1/';
   const defaultOptions = {
     loop: true,
     autoplay: true,

@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { useTheme } from '../../context/ThemeContext';
 
 const MyChats = ({fetchAgain}) => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const {isDarkMode} = useTheme();
   const {selectedChat,setSelectedChat,chats,setChats} = useChat();
   const {id} = useSelector((state) => state.user); // getting id of loggedIn user

@@ -11,7 +11,7 @@ import { useSelector } from 'react-redux';
 import animationData from '../../animation/typingAnimation.json';
 import { useTheme } from '../../context/ThemeContext';
 
-const ENDPOINT = "http://localhost:3000"; // backend endpoint
+const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
 var socket, selectedChatCompare;
 
 const SingleChat = ({fetchAgain, setFetchAgain}) => {

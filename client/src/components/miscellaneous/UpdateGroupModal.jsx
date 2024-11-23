@@ -12,7 +12,7 @@ import Lottie from 'react-lottie';
 import spinnerAnimation from '../../animation/Spinner.json';
 
 const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const [editGroupName,setEditGroupName] = useState(false);
   const [groupName,setGroupName] = useState("");
   const [isAddUserToGroup,setIsAddUserToGroup] = useState(false);

@@ -7,7 +7,7 @@ This is a **real-time chat application** built using the MERN stack (MongoDB, Ex
 - **Real-time Messaging**: Users can send and receive messages instantly with the help of Socket.IO.
 - **User Authentication**: Register and login to access personalized chat.
 - **Message Notifications**: Real-time notifications when a new message is received.
-- **Image/File Sharing**: Send images in messages.
+- **Image Sharing**: Send images in messages.
 - **Responsive Design**: Works well on both mobile and desktop.
 - **Typing Indicators**: Shows when someone is typing.
 

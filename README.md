@@ -39,46 +39,56 @@ Try the live version of the application:
 
 ## Installation
 
-### 1. Clone the repository
+### Clone the repository
 ```bash
 git clone https://github.com/Ruman7860/CHAT-APP-MERN.git
 ```
 
-#### Backend
+### Backend Setup
 
-### 2. Install dependencies
-After cloning the repository, navigate to the `server` directory where the backend files are located:
-
+### 1. After cloning the repository, navigate to the `server` directory where the backend files are located:
 ```bash
 cd server
 ```
 
-
-### 3. Install dependencies:
+### 2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 4. Install dependencies:
+### 3. Create a `.env` file and configure the environment variables:
+```bash
+MONGO_URI=your-mongodb-connection-uri
+JWT_SECRET=your-jwt-secret
+PORT=3000
+CLOUDINARY_CLOUD_NAME=your CLOUDINARY cloud name
+CLOUDINARY_API_KEY=your CLOUDINARY API key
+CLOUDINARY_API_SECRET=your CLOUDINARY API SCERET
+```
+
+### 4. Start the backend server:
+```bash
+npm start
+```
+
+### Frontend Setup
+
+
+### 1. Navigate to the frontend folder:
+```bash
+cd client
+```
+
+### 2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 5. Install dependencies:
+### 3. Start the frontend server:
 ```bash
-npm install
+npm run dev
 ```
 
-
-### 6. Install dependencies:
-```bash
-npm install
-```
-
-### 7. Install dependencies:
-```bash
-npm install
-```
 
 
 

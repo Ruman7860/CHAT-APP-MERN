@@ -15,7 +15,7 @@ const ENDPOINT = "http://localhost:3000"; // backend endpoint
 var socket, selectedChatCompare;
 
 const SingleChat = ({fetchAgain, setFetchAgain}) => {
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const {selectedChat,notifications,setNotifications} = useChat();
   const [messages,setMessages] = useState([]);
   const [newMessage,setNewMessage] = useState('');

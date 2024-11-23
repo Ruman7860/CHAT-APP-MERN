@@ -46,17 +46,17 @@ git clone https://github.com/Ruman7860/CHAT-APP-MERN.git
 
 ### Backend Setup
 
-### 1. After cloning the repository, navigate to the `server` directory where the backend files are located:
+#### 1. After cloning the repository, navigate to the `server` directory where the backend files are located:
 ```bash
 cd server
 ```
 
-### 2. Install dependencies:
+#### 2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 3. Create a `.env` file and configure the environment variables:
+#### 3. Create a `.env` file and configure the environment variables:
 ```bash
 MONGO_URI=your-mongodb-connection-uri
 JWT_SECRET=your-jwt-secret
@@ -66,7 +66,7 @@ CLOUDINARY_API_KEY=your CLOUDINARY API key
 CLOUDINARY_API_SECRET=your CLOUDINARY API SCERET
 ```
 
-### 4. Start the backend server:
+#### 4. Start the backend server:
 ```bash
 npm start
 ```
@@ -74,17 +74,17 @@ npm start
 ### Frontend Setup
 
 
-### 1. Navigate to the frontend folder:
+#### 1. Navigate to the frontend folder:
 ```bash
 cd client
 ```
 
-### 2. Install dependencies:
+#### 2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 3. Start the frontend server:
+#### 3. Start the frontend server:
 ```bash
 npm run dev
 ```

@@ -10,7 +10,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const Login = () => {
 
-  const backendURL = 'http://localhost:3000/api/v1/';
+  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isDarkMode, toggleDarkMode } = useTheme();

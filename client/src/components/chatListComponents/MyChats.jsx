@@ -6,14 +6,14 @@ import { useSelector } from 'react-redux';
 import { useTheme } from '../../context/ThemeContext';
 
 const MyChats = ({fetchAgain}) => {
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const {isDarkMode} = useTheme();
   const {selectedChat,setSelectedChat,chats,setChats} = useChat();
   const {id} = useSelector((state) => state.user); // getting id of loggedIn user
 
   const fetchChats = async () => {
     try {
-      const res = await axios.get(`${backendURL}chats/`,{withCredentials:true});
+      const res = await axios.get(`${backendURL}/api/v1/chats/`,{withCredentials:true});
       setChats(res.data.data);
     } catch (error) {
       console.log("error : ",error.message);

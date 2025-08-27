@@ -63,18 +63,10 @@ export const login = async (req,res,next) => {
 
     const token = jwt.sign({id : user._id},process.env.JWT_SECRET,{expiresIn: "30d"});
 
-    // res.cookie('access_token',token,{
-    //   httpOnly:true,
-    // }).status(200).json({
-    //   success : true,
-    //   message : "Login Successfull",
-    //   user : user
-    // })
-
     res.cookie('access_token', token, {
       httpOnly: true,      // This ensures that the cookie is not accessible via JavaScript
       secure: process.env.NODE_ENV === 'production',  // Set this to true in production (HTTPS)
-      sameSite: 'None',    // Allow cross-site cookie usage (set to 'Strict' or 'Lax' if you don't need cross-site)
+      sameSite: process.env.NODE_ENV === 'production' && 'None',    // Allow cross-site cookie usage (set to 'Strict' or 'Lax' if you don't need cross-site)
     }).status(200).json({
       success: true,
       message: "Login successful",
@@ -99,9 +91,6 @@ export const logout = async (req,res,next) => {
 }
 
 export const updateProfile = async (req,res,next) => {
-  console.log("req.body :-",req.body);
-  console.log("req.file :-",req.file);
-
   const {username,email} = req.body;
 
   const {id} = req.user;

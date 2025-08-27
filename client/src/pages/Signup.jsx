@@ -13,7 +13,7 @@ import spinnerAnimation from '../animation/Spinner.json';
 
 const Signup = () => {
 
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
 
   const defaultOptions = {
     loop: true,
@@ -61,7 +61,7 @@ const Signup = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        `${backendURL}auth/signup`,
+        `${backendURL}/api/v1/auth/signup`,
         formData,
         {
           withCredentials: true,
@@ -70,11 +70,9 @@ const Signup = () => {
       );
 
       if(res.data.success === false){
-        console.log(res.data.message);
         toast.error(res.data.message);
         return;
       }
-      console.log(res.data.message);
       setLoading(false);
       toast.success("signup successfull! Now login");
       navigate('/login');
@@ -87,7 +85,6 @@ const Signup = () => {
 
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
-    console.log(file);
     if(file.type.startsWith('image/')){
       setProfilePic(URL.createObjectURL(file));
       setError((prev) => ({...prev,profileError:false}))

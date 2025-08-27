@@ -25,17 +25,14 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
   }
 
   const handleImageSend = () => {
-    console.log("for images");
     photo.current.click();
   }
   const handleFileSend = () => {
-    console.log("for files");
     fileRef.current.click();
   }
 
   const handleImage = (e) => {
     setImage(e.target.files[0]);
-    console.log(e.target.files[0]);
     setImagePreview(URL.createObjectURL(e.target.files[0]));
     setImagePreviewUrl(URL.createObjectURL(e.target.files[0]));
   }
@@ -43,7 +40,6 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
-    console.log(selectedFile); // Ensure this logs the file object
   };
 
   return (

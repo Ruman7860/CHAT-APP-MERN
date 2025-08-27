@@ -10,7 +10,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 const Login = () => {
 
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -32,10 +32,9 @@ const Login = () => {
       return;
     }
     try {
-      const res = await axios.post(`${backendURL}auth/login`,{email,password},{withCredentials: true});
+      const res = await axios.post(`${backendURL}/api/v1/auth/login`,{email,password},{withCredentials: true});
 
       if(res.data.success === false){
-        console.log("Not logging...");
         toast.error("Login unsuccessfull!")
         return;
       }

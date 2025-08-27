@@ -13,11 +13,12 @@ import Spinner from '../../animation/Spinner.json';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
-const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
+const ENDPOINT = "http://localhost:3000"; // backend endpoint
+// const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
 var socket, selectedChatCompare;
 
 const SingleChat = ({fetchAgain, setFetchAgain}) => {
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const {selectedChat,notifications,setNotifications} = useChat();
   const [messages,setMessages] = useState([]);
   const [newMessage,setNewMessage] = useState('');
@@ -48,8 +49,6 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     },
   };
 
-
-
   const sendMessage = async (e) => {
     e.preventDefault();
 
@@ -74,7 +73,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
     try {
       const res = await axios.post(
-        `${backendURL}messages`,
+        `${backendURL}/api/v1/messages`,
         formData,
         {
           withCredentials:true,
@@ -101,7 +100,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
     }
 
     try {
-      const res = await axios.get(`${backendURL}messages/${selectedChat._id}`, { withCredentials: true });
+      const res = await axios.get(`${backendURL}/api/v1/messages/${selectedChat._id}`, { withCredentials: true });
         
       setMessages(res.data.data);
       // loggedIn user room join or chat krne ke lia
@@ -121,20 +120,6 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
   },[])
 
   useEffect(() => {
-    // socket.on("message-recieved", (newMessageRecieved) => {
-    //   if (
-    //     !selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
-    //     if (!notifications.includes(newMessageRecieved)) {
-    //       setNotifications([newMessageRecieved, ...notifications]);
-    //       setFetchAgain(!fetchAgain);
-    //     }
-    //   } else {
-    //     setMessages([...messages, newMessageRecieved]);
-    //     setFetchAgain(!fetchAgain);
-    //     fetchMessages();
-    //   }
-    // });
-
     socket.on("message-recieved", (newMessageRecieved) => {
       if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
         if (!notifications.some((notif) => notif._id === newMessageRecieved._id)) {
@@ -152,28 +137,6 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
       }
     });
   },[])
-
-  // useEffect(() => {
-  //   socket.on("message-recieved", (newMessageRecieved) => {
-  //     if (
-  //       !selectedChatCompare ||
-  //       selectedChatCompare._id !== newMessageRecieved.chat._id
-  //     ) {
-  //       if (!notifications.some((notif) => notif._id === newMessageRecieved._id)) {
-  //         setNotifications([newMessageRecieved, ...notifications]);
-  //         setFetchAgain(!fetchAgain);
-  //       }
-  //     } else {
-  //       setMessages((prevMessages) => {
-  //         if (!prevMessages.some((msg) => msg._id === newMessageRecieved._id)) {
-  //           return [...prevMessages, newMessageRecieved];
-  //         }
-  //         return prevMessages;
-  //       });
-  //       setFetchAgain(!fetchAgain);
-  //     }
-  //   });
-  // }, [notifications, fetchAgain, selectedChatCompare]);
 
   useEffect(() => {
     fetchMessages();

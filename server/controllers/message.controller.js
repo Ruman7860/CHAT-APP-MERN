@@ -24,8 +24,6 @@ export const allMessages = async (req,res,next) => {
 }
 
 export const sendMessage = async (req,res,next) => {
-    console.log("body :->",req.body);
-    console.log("file :->",req.file);
     const { content, chatId } = req.body;
     const {id} = req.user;
 

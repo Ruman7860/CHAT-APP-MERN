@@ -29,7 +29,6 @@ export const accessOrCreateChat = async (req, res,next) => {
   const { userId } = req.body;
 
   if (!userId) {
-    console.log("UserId param not sent with request");
     return next(errorHandler(400,"UserId param not sent with request"));
   }
   try {
@@ -112,7 +111,6 @@ export const createGroupChat = async (req,res,next) => {
     }
     // from frontend users list are send in array that's why we are parsing.
     var users = JSON.parse(req.body.users);
-    console.log("users : ",users);
 
     if (users.length < 2) {
       return res.status(400).json({
@@ -126,8 +124,6 @@ export const createGroupChat = async (req,res,next) => {
 
     const loggedInUserId = req.user.id;
     users.push(loggedInUserId);
-
-    console.log("New users : ",users)
 
     // creating new group
     const groupChat = await Chat.create({

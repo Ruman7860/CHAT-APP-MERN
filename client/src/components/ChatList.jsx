@@ -11,7 +11,7 @@ import { useChat } from '../context/ChatContext.jsx';
 import toast from 'react-hot-toast';
 
 const ChatList = ({ fetchAgain}) => {
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {isDarkMode} = useTheme();
@@ -20,7 +20,7 @@ const ChatList = ({ fetchAgain}) => {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        `${backendURL}auth/logout`,
+        `${backendURL}/api/v1/auth/logout`,
         {}, // no data payload needed
         { withCredentials: true } // set `withCredentials` here
       );
@@ -37,8 +37,6 @@ const ChatList = ({ fetchAgain}) => {
       toast.error(error.message);
     }
   }
-
-  // #fcf5eb
 
   return (
     <div className={`w-full md:w-1/3 lg:w-1/4 ${isDarkMode ? 'bg-gray-900 text-white ' : 'bg-[#fcf5eb] text-black border-r border-gray-500'} overflow-y-auto

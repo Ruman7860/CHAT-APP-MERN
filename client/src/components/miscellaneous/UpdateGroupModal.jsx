@@ -12,7 +12,7 @@ import Lottie from 'react-lottie';
 import spinnerAnimation from '../../animation/Spinner.json';
 
 const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const [editGroupName,setEditGroupName] = useState(false);
   const [groupName,setGroupName] = useState("");
   const [isAddUserToGroup,setIsAddUserToGroup] = useState(false);
@@ -61,7 +61,7 @@ const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
 
     try {
       const res = await axios.put(
-        `${backendURL}chats/change-group-photo`,
+        `${backendURL}/api/v1/chats/change-group-photo`,
         formData,
         {
           withCredentials: true,
@@ -95,7 +95,7 @@ const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
         return;
     }
     try {
-        const res = await axios.put(`${backendURL}chats/rename-group`,{chatId : selectedChat._id, chatName : groupName},{withCredentials:true});
+        const res = await axios.put(`${backendURL}/api/v1/chats/rename-group`,{chatId : selectedChat._id, chatName : groupName},{withCredentials:true});
 
         if(res.data.success === false){
             toast.error("name not changed!");
@@ -117,18 +117,16 @@ const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
 
   const handleAddToGroup = async (userToAdd) => {
     if(selectedChat.users.find((user) => user._id === userToAdd._id)){
-        console.log("user is already in group");
         return;
     }
 
     if(selectedChat.groupAdmin._id !== id){
-        console.log("only admin can add and remove members");
         return;
     }
 
     try {
         const res = await axios.put(
-            `${backendURL}chats/group-add`,
+            `${backendURL}/api/v1/chats/group-add`,
             {chatId : selectedChat._id,userId:userToAdd._id},
             {withCredentials:true}
         );
@@ -137,8 +135,6 @@ const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
             toast.error("user not added!");
             return;
         }
-
-        console.log(res.data.data);
         setSelectedChat(res.data.data);
         setFetchAgain(!fetchAgain);
         toast.success("user added successfully")
@@ -151,16 +147,14 @@ const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
 
   const handleRemove = async (userToRemove) => {
     if(selectedChat.groupAdmin._id !== id && userToRemove._id !== id){
-        console.log("only admin can add and remove members");
         return;
     }
     try {
         const res = await axios.put(
-            `${backendURL}group-remove`,
+            `${backendURL}/api/v1/group-remove`,
             {chatId : selectedChat._id,userId:userToRemove._id},
             {withCredentials:true}
         );
-        console.log(res.data.data);
         userToRemove._id === id ? setSelectedChat() : setSelectedChat(res.data.data);
         setFetchAgain(!fetchAgain);
         fetchMessages();
@@ -179,11 +173,10 @@ const UpdateGroupModal = ({fetchAgain,setFetchAgain,fetchMessages}) => {
     }
 
     try {
-        const res = await axios.get(`${backendURL}chats/search?search=${query}`,{withCredentials:true});
-        console.log(res.data.data);
+        const res = await axios.get(`${backendURL}/api/v1/chats/search?search=${query}`,{withCredentials:true});
         setSearchResult(res.data.data);
     } catch (error) {
-        console.log("error : ", error,message);
+        console.log("error:", error,message);
         return;
     }
   }

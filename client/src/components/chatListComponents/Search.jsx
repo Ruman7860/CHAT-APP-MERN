@@ -6,7 +6,7 @@ import { useChat } from '../../context/ChatContext';
 import UserSearch from '../miscellaneous/UserSearch';
 
 const Search = () => {
-  const backendURL = "https://chat-app-mern-backend-0e7i.onrender.com/api/v1/";
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const {isDarkMode} = useTheme();
   const [searchTerm,setSearchTerm] = useState('');
   const [searchResult,setSearchResult] = useState([]);
@@ -18,7 +18,7 @@ const Search = () => {
       return;
     }
     try {
-      const res = await axios.get(`${backendURL}chats/search?search=${searchTerm}`,{withCredentials:true});
+      const res = await axios.get(`${backendURL}/api/v1/chats/search?search=${searchTerm}`,{withCredentials:true});
       setSearchResult(res.data.data);
     } catch (error) {
       console.log("error occurred : ",  error.message);
@@ -28,7 +28,7 @@ const Search = () => {
 
   const accessChat = async (userId) => {
     try {
-      const res = await axios.post(`${backendURL}chats/`,{userId : userId},{withCredentials:true});
+      const res = await axios.post(`${backendURL}/api/v1/chats/`,{userId : userId},{withCredentials:true});
 
       if(!chats.find((c) => c._id === res.data.data._id)){
         setChats([res.data.data,...chats]);

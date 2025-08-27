@@ -9,10 +9,10 @@ import messageRouter from './routes/message.route.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-const frontendURL = "https://chat-app-mern-frontend-yn0w.onrender.com";
 
 // Load environment variables
 dotenv.config();
+const frontendURL = process.env.frontendURL || 'http://localhost:5173';
 
 // Create Express app
 const app = express();
@@ -71,20 +71,14 @@ const io = new Server(server, {
 
 // WebSocket events
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
     // frontend will send some data and will join our room
     socket.on('setup',(loggedInUserId) => {
-        // creating a new room with id of userData and that room will be exclusive to that particular user only
-        socket.join(loggedInUserId);
-        console.log(loggedInUserId);
         socket.emit("connected");
     });
 
     // loggedIn User kis chat or room ko join kr rha hai.
     socket.on('join-chat',(room) => {
         socket.join(room);
-        console.log("User joined Room "+room);
     });
 
     socket.on('typing',(room) => socket.in(room).emit('typing'));
@@ -93,7 +87,6 @@ io.on('connection', (socket) => {
     socket.on('new-message',(newMessageRecieved) => {
         const chat = newMessageRecieved.chat;
         if(!chat.users){
-            console.log("chat.users not defined");
             return;
         }
         chat.users.forEach(user => {

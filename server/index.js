@@ -73,6 +73,7 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
     // frontend will send some data and will join our room
     socket.on('setup',(loggedInUserId) => {
+        socket.join(loggedInUserId)
         socket.emit("connected");
     });
 

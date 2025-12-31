@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 import Tooltip from '../../utils/Tooltip';
-import { FaFile, FaTimes, FaFileExcel, FaDownload } from 'react-icons/fa';
+import { FaFile, FaTimes, FaFileExcel, FaDownload, FaTrash } from 'react-icons/fa';
 import ImagePreview from '../miscellaneous/ImagePreview';
 import { MdDelete } from 'react-icons/md';
 import MessageLoader from '../../utils/MessageLoader';
@@ -21,6 +21,9 @@ const Messages = ({ messages, setMessages }) => {
   const handleSelectMessage = (messageId) => {
     setSelectedMessageId((prevId) => (prevId === messageId ? null : messageId));
   };
+
+  const truncateText = (text = "", length = 25) =>
+    text.length > length ? text.slice(0, length) + "..." : text;
 
   const handleImageClick = (messageId, image, event) => {
     // If the clicked image is the same as the current one, toggle the menu visibility
@@ -141,7 +144,17 @@ const Messages = ({ messages, setMessages }) => {
             }
             {
               msg.file && msg.fileType && msg.fileType.startsWith('audio/') && (
-                <audio controls src={msg.file} className="w-full min-w-[300px]" />
+                <div className="relative group w-full">
+                  <audio controls src={msg.file} className="w-full min-w-[300px]" />
+                  <span className="text-sm font-bold mt-2">{truncateText(msg.fileName) || ''}</span>
+                  <button onClick={() => handleDownload(msg.file, "audio.mp3")} className="absolute bottom-0 right-14 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <FaDownload />
+                  </button>
+                  <button onClick={() => handleDeleteMessage(msg._id)} className="absolute bottom-0 right-3 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <FaTrash />
+                  </button>
+                </div>
+
               )
             }
             {
@@ -151,17 +164,27 @@ const Messages = ({ messages, setMessages }) => {
                     src={msg.file}
                     className="w-full h-[400px]"
                   />
+                  <span className='text-sm font-bold mt-2'>
+                    {truncateText(msg?.fileName) || ''}
+                  </span>
 
                   <button
-                    onClick={() => handleDownload(msg.file, "document.pdf")}
+                    onClick={() => handleDownload(msg.file, msg.fileName || 'document.pdf')}
                     className="absolute top-3 left-3 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                   >
-                    Download
+                    <FaDownload className="text-md" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteMessage(msg._id)}
+                    className="absolute top-3 left-14 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
+                    <FaTrash className="text-md" />
                   </button>
                 </div>
               )
             }
-            {msg.file &&
+            {
+              msg.file &&
               ["application/msword",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "application/vnd.ms-powerpoint",
@@ -174,16 +197,27 @@ const Messages = ({ messages, setMessages }) => {
                     )}&embedded=true`}
                     className="w-full h-[400px]"
                   />
+                  <span className='text-sm font-bold mt-2'>
+                    {truncateText(msg?.fileName) || ''}
+                  </span>
 
                   <button
-                    onClick={() => handleDownload(msg.file)}
+                    onClick={() => handleDownload(msg.file, msg.fileName || 'document.pdf')}
                     className="absolute top-3 left-3 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                   >
-                    Download
+                    <FaDownload />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteMessage(msg._id)}
+                    className="absolute top-3 left-14 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
+                    <FaTrash />
                   </button>
                 </div>
-              )}
-            {msg.file &&
+              )
+            }
+            {
+              msg.file &&
               msg.fileType ===
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && (
                 <div className="flex items-center min-w-[300px] justify-center gap-3 bg-[#2b2b2b] text-white p-3 rounded-xl">
@@ -195,24 +229,32 @@ const Messages = ({ messages, setMessages }) => {
 
                     <div className="flex flex-col overflow-hidden">
                       <span className="font-medium truncate max-w-[320px]">
-                        {msg.fileName || "Excel File.xlsx"}
+                        {truncateText(msg.fileName) || "Excel File.xlsx"}
                       </span>
                       <span className="text-xs text-gray-300">
                         Spreadsheet
                       </span>
                     </div>
                   </div>
-
-                  {/* Right: Download icon */}
-                  <button
-                    onClick={() => handleDownload(msg.file, msg.fileName || "file.xlsx")}
-                    className="p-2 rounded-full hover:bg-white/10 transition"
-                    title="Download"
-                  >
-                    <FaDownload className="text-lg" />
-                  </button>
+                  <div className='flex items-center gap-1'>
+                    <button
+                      onClick={() => handleDownload(msg.file, msg.fileName || "file.xlsx")}
+                      className="p-2 rounded-full hover:bg-white/10 transition"
+                      title="Download"
+                    >
+                      <FaDownload className="text-md" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMessage(msg._id)}
+                      className="p-2 rounded-full hover:bg-white/10 transition"
+                      title="Delete"
+                    >
+                      <FaTrash className="text-md" />
+                    </button>
+                  </div>
                 </div>
-              )}
+              )
+            }
 
             <span onClick={handleDelete}>{msg.content}</span>
           </p>

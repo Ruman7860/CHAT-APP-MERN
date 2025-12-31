@@ -17,19 +17,19 @@ const ENDPOINT = "http://localhost:3000"; // backend endpoint
 // const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
 var socket, selectedChatCompare;
 
-const SingleChat = ({fetchAgain, setFetchAgain}) => {
+const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
-  const {selectedChat,notifications,setNotifications} = useChat();
-  const [messages,setMessages] = useState([]);
-  const [newMessage,setNewMessage] = useState('');
-  const [socketConnected,setSocketConnected] = useState(false);
-  const [typing,setTyping] = useState(false);
-  const [isTyping,setIsTyping] = useState(false);
-  const [image,setImage] = useState(null);
-  const [imagePreview,setImagePreview] = useState(null);
-  const [file,setFile] = useState(null);
-  const [loading,setLoading] = useState(false);
-  const {id} = useSelector((state) => state.user);
+  const { selectedChat, notifications, setNotifications } = useChat();
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { id } = useSelector((state) => state.user);
 
   const defaultOptions = {
     loop: true,
@@ -57,18 +57,19 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
       return;
     }
 
-    socket.emit('stop-typing',selectedChat._id);
-    
+    socket.emit('stop-typing', selectedChat._id);
+
     const formData = new FormData();
-    formData.append('content',newMessage);
-    formData.append('chatId',selectedChat._id);
-    if(image){
+    formData.append('content', newMessage);
+    formData.append('chatId', selectedChat._id);
+    if (image) {
       setLoading(true);
-      formData.append('file',image);
+      formData.append('file', image);
     }
-    if(file){
+    if (file) {
+      setLoading(true);
       console.log(file);
-      formData.append('file',file);
+      formData.append('file', file);
     }
 
     try {
@@ -76,8 +77,8 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
         `${backendURL}/api/v1/messages`,
         formData,
         {
-          withCredentials:true,
-          headers: {'Content-Type': 'multipart/form-data',},
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data', },
         }
       );
       setLoading(false);
@@ -85,39 +86,39 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
       setImage(null);
       setFile(null);
       setImagePreview(null); // Clear the preview after sending
-      socket.emit('new-message',res.data.data);
+      socket.emit('new-message', res.data.data);
       // setMessages([...messages,res.data.data]);
       setMessages((prevMessages) => [...prevMessages, res.data.data]);
     } catch (error) {
-      console.log("error :",error.message);
+      console.log("error :", error.message);
       return;
     }
   }
-  
+
   const fetchMessages = async () => {
-    if(!selectedChat){
-        return;
+    if (!selectedChat) {
+      return;
     }
 
     try {
       const res = await axios.get(`${backendURL}/api/v1/messages/${selectedChat._id}`, { withCredentials: true });
-        
+
       setMessages(res.data.data);
       // loggedIn user room join or chat krne ke lia
-      socket.emit('join-chat',selectedChat._id);
+      socket.emit('join-chat', selectedChat._id);
     } catch (error) {
-      console.log("error :",error.message);
+      console.log("error :", error.message);
       return;
     }
   }
 
   useEffect(() => {
-    socket = io(ENDPOINT,{withCredentials:true,transports: ['websocket']});
-    socket.emit('setup',id);
-    socket.on("connected",() => setSocketConnected(true));
-    socket.on('typing',() => setIsTyping(true));
-    socket.on('stop-typing',() => setIsTyping(false));
-  },[])
+    socket = io(ENDPOINT, { withCredentials: true, transports: ['websocket'] });
+    socket.emit('setup', id);
+    socket.on("connected", () => setSocketConnected(true));
+    socket.on('typing', () => setIsTyping(true));
+    socket.on('stop-typing', () => setIsTyping(false));
+  }, [])
 
   useEffect(() => {
     socket.on("message-recieved", (newMessageRecieved) => {
@@ -136,12 +137,12 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
         setFetchAgain(!fetchAgain);
       }
     });
-  },[])
+  }, [])
 
   useEffect(() => {
     fetchMessages();
     selectedChatCompare = selectedChat
-  },[selectedChat]);
+  }, [selectedChat]);
 
 
   const typingHandler = (e) => {
@@ -186,7 +187,7 @@ const SingleChat = ({fetchAgain, setFetchAgain}) => {
 
             {/* Main Chat Box */}
             <ScrollableFeed className='flex-1'>
-              <Messages messages={messages} setMessages={setMessages}/>
+              <Messages messages={messages} setMessages={setMessages} />
             </ScrollableFeed>
             {isTyping && (
               <div className="mt-auto mb-0">

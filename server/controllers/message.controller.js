@@ -4,18 +4,18 @@ import Chat from "../model/chat.model.js";
 import Message from "../model/message.model.js";
 import User from "../model/user.model.js";
 
-export const allMessages = async (req,res,next) => {
-    const {chatId} = req.params;
-    if(!chatId){
-        return next(errorHandler(404,"Chat not found"));
+export const allMessages = async (req, res, next) => {
+    const { chatId } = req.params;
+    if (!chatId) {
+        return next(errorHandler(404, "Chat not found"));
     }
     try {
         const messages = await Message.find({ chat: chatId })
-          .populate("sender", "username profilePic email")
-          .populate("chat");
-        
+            .populate("sender", "username profilePic email")
+            .populate("chat");
+
         res.status(200).json({
-            success : true,
+            success: true,
             data: messages
         })
     } catch (error) {
@@ -23,18 +23,18 @@ export const allMessages = async (req,res,next) => {
     }
 }
 
-export const sendMessage = async (req,res,next) => {
+export const sendMessage = async (req, res, next) => {
     const { content, chatId } = req.body;
-    const {id} = req.user;
+    const { id } = req.user;
 
-    if(!id){
-        return next(errorHandler(401,"UnAuthorized"));
+    if (!id) {
+        return next(errorHandler(401, "UnAuthorized"));
     }
 
     if (!chatId) {
-        return next(errorHandler(400,"Invalid data passed into request"));
+        return next(errorHandler(400, "Invalid data passed into request"));
     }
-    
+
     if (content === '' && !req.file) {
         return next(errorHandler(400, "Content or image must be provided"));
     }
@@ -42,10 +42,36 @@ export const sendMessage = async (req,res,next) => {
     let imageURL = '';
     let fileURL = '';
     let fileType = '';
-    if(req.file){
+    let fileName = '';
+    if (req.file) {
         try {
-            const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: 'auto' });
-            const isImage = req.file.mimetype.startsWith('image/');
+            let resourceType = 'auto';
+            let format = undefined;
+
+            if (req.file.mimetype === 'application/pdf') {
+                resourceType = 'image';
+                format = 'pdf';
+            } else if (req.file.mimetype === 'application/msword' || req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                resourceType = 'raw';
+            } else if (req.file.mimetype === 'audio/mpeg') { // MP3
+                resourceType = 'video'; // Cloudinary treats audio as video
+            } else if (req.file.mimetype === 'application/vnd.ms-powerpoint' || req.file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+                resourceType = 'raw';
+            } else if (req.file.mimetype === 'application/vnd.ms-excel' || req.file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                resourceType = 'raw';
+            }
+
+            // Override resourceType for audio to 'video' or specific if needed, but 'video' is standard for audio in Cloudinary
+            const uploadOptions = { resource_type: resourceType };
+            if (format) uploadOptions.format = format;
+
+
+            const uploadResult = await cloudinary.uploader.upload(req.file.path, uploadOptions);
+
+            const isImage = req.file.mimetype.startsWith('image/') && req.file.mimetype !== 'application/pdf'; // PDF treated as image for upload but we might want to store it as fileURL
+
+            fileName = req.file.originalname;
+
             if (isImage) {
                 imageURL = uploadResult.secure_url;
             } else {
@@ -53,11 +79,12 @@ export const sendMessage = async (req,res,next) => {
                 fileType = req.file.mimetype;
             }
         } catch (uploadError) {
-            return next(errorHandler(500, "Image upload failed"));
+            console.error("Cloudinary Upload Error:", uploadError);
+            return next(errorHandler(500, "Image/File upload failed"));
         }
     }
 
-    
+
     try {
         var newMessage = {
             sender: id,
@@ -66,6 +93,7 @@ export const sendMessage = async (req,res,next) => {
             image: imageURL || undefined,
             file: fileURL || undefined,
             fileType: fileType || undefined,
+            fileName: fileName || undefined,
         };
         var message = await Message.create(newMessage);
 
@@ -79,8 +107,8 @@ export const sendMessage = async (req,res,next) => {
         await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
 
         res.status(200).json({
-            success : true,
-            data : message
+            success: true,
+            data: message
         });
     } catch (error) {
         next(error);
@@ -140,37 +168,37 @@ export const deleteMessage = async (req, res, next) => {
 
 export const changeGroupPhoto = async (req, res, next) => {
     const { chatId } = req.body;
-  
+
     if (!req.file?.path) {
-      return next(errorHandler(400, "Group photo file is required"));
+        return next(errorHandler(400, "Group photo file is required"));
     }
-  
+
     try {
-      // Upload the new group photo to Cloudinary
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: 'auto' });
-      const groupPhotoURL = uploadResult.secure_url;
-  
-      // Update the group photo in the database
-      const updatedChat = await Chat.findByIdAndUpdate(
-        chatId,
-        {
-          groupPhoto: groupPhotoURL,
-        },
-        { new: true } // Return the updated document
-      )
-        .populate("users", "-password")
-        .populate("groupAdmin", "-password");
-  
-      if (!updatedChat) {
-        return next(errorHandler(404, "Chat Not Found"));
-      }
-  
-      res.status(200).json({
-        success: true,
-        data: updatedChat,
-      });
+        // Upload the new group photo to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: 'auto' });
+        const groupPhotoURL = uploadResult.secure_url;
+
+        // Update the group photo in the database
+        const updatedChat = await Chat.findByIdAndUpdate(
+            chatId,
+            {
+                groupPhoto: groupPhotoURL,
+            },
+            { new: true } // Return the updated document
+        )
+            .populate("users", "-password")
+            .populate("groupAdmin", "-password");
+
+        if (!updatedChat) {
+            return next(errorHandler(404, "Chat Not Found"));
+        }
+
+        res.status(200).json({
+            success: true,
+            data: updatedChat,
+        });
     } catch (error) {
-      next(error);
+        next(error);
     }
-  };
-  
+};
+

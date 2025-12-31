@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 import Tooltip from '../../utils/Tooltip';
-import { FaTimes } from 'react-icons/fa';
+import { FaFile, FaTimes, FaFileExcel, FaDownload } from 'react-icons/fa';
 import ImagePreview from '../miscellaneous/ImagePreview';
 import { MdDelete } from 'react-icons/md';
 
@@ -48,34 +48,21 @@ const Messages = ({ messages, setMessages }) => {
     setShowDeleteBtn(!showDeleteBtn)
   }
 
-  const handleDownload = async (imageURL) => {
+  const handleDownload = async (fileURL, fileName = 'download') => {
     try {
-      // Fetch the image because image is stored at cloudinary
-      const response = await fetch(imageURL);
-
-      // converting reponse body into blob  
-      const blob = await response.blob(); // blob -> binary large object.Acts like file
-
-      // Create a download link for the Blob
+      const response = await fetch(fileURL);
+      const blob = await response.blob();
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'downloaded-image.jpg'; // Default file name
+      link.download = fileName; // Default file name
       document.body.appendChild(link);
-
-      // Trigger the download by simulating a click
       link.click();
-
-      // Clean up by removing the link and revoking the Blob URL
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
-    }
-    catch (error) {
+    } catch (error) {
       console.error('Download failed:', error);
     }
-    // Hide the menu after download
     setMenuData({ ...menuData, isVisible: false });
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
   };
 
   // return true -> when next msg is from otherUser.
@@ -150,6 +137,81 @@ const Messages = ({ messages, setMessages }) => {
                 onClick={(e) => handleImageClick(msg._id, msg.image, e)}
               />
             }
+            {
+              msg.file && msg.fileType && msg.fileType.startsWith('audio/') && (
+                <audio controls src={msg.file} className="w-full min-w-[300px]" />
+              )
+            }
+            {
+              msg.file && msg.fileType === 'application/pdf' && (
+                <div className="relative group w-full">
+                  <iframe
+                    src={msg.file}
+                    className="w-full h-[400px]"
+                  />
+
+                  <button
+                    onClick={() => handleDownload(msg.file, "document.pdf")}
+                    className="absolute top-3 left-3 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
+                    Download
+                  </button>
+                </div>
+              )
+            }
+            {msg.file &&
+              ["application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.ms-powerpoint",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+              ].includes(msg.fileType) && (
+                <div className="relative group w-full">
+                  <iframe
+                    src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                      msg.file
+                    )}&embedded=true`}
+                    className="w-full h-[400px]"
+                  />
+
+                  <button
+                    onClick={() => handleDownload(msg.file)}
+                    className="absolute top-3 left-3 bg-black/70 text-white text-xs px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  >
+                    Download
+                  </button>
+                </div>
+              )}
+            {msg.file &&
+              msg.fileType ===
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && (
+                <div className="flex items-center min-w-[300px] justify-center gap-3 bg-[#2b2b2b] text-white p-3 rounded-xl">
+                  {/* Left: Excel icon + info */}
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="bg-green-600 p-2 rounded-md">
+                      <FaFileExcel className="text-white text-xl" />
+                    </div>
+
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="font-medium truncate max-w-[320px]">
+                        {msg.fileName || "Excel File.xlsx"}
+                      </span>
+                      <span className="text-xs text-gray-300">
+                        Spreadsheet
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right: Download icon */}
+                  <button
+                    onClick={() => handleDownload(msg.file, msg.fileName || "file.xlsx")}
+                    className="p-2 rounded-full hover:bg-white/10 transition"
+                    title="Download"
+                  >
+                    <FaDownload className="text-lg" />
+                  </button>
+                </div>
+              )}
+
             <span onClick={handleDelete}>{msg.content}</span>
           </p>
           {selectedMessageId === msg._id && msg.sender._id === id && !msg.image && (
@@ -178,7 +240,7 @@ const Messages = ({ messages, setMessages }) => {
             </button>
             <button
               className={`block px-3 py-1 rounded-lg ${isDarkMode ? 'hover:bg-amber-800' : 'hover:bg-slate-200'} w-full text-left`}
-              onClick={() => handleDownload(menuData.image)}
+              onClick={() => handleDownload(menuData.image || menuData.file)}
             >
               Download
             </button>

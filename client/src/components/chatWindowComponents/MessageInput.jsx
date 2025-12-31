@@ -9,17 +9,18 @@ import { FaImage } from "react-icons/fa";
 import { FaFile } from "react-icons/fa6";
 import Tooltip from '../../utils/Tooltip';
 
-const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setImage,setImagePreview,setFile}) => {
-  const {isDarkMode} = useTheme();
-  const [showEmojiPicker,setShowEmojiPicker] = useState(false);
+const MessageInput = ({ sendMessage, newMessage, typingHandler, setNewMessage, setImage, setImagePreview, setFile }) => {
+  const { isDarkMode } = useTheme();
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const photo = useRef(null);
   const fileRef = useRef(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
 
   const toggleEmogiPicker = () => {
     setShowEmojiPicker(!showEmojiPicker);
   }
-  
+
   const onClickEmogi = (emojiData) => {
     setNewMessage(newMessage + emojiData.emoji);
   }
@@ -32,39 +33,61 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
   }
 
   const handleImage = (e) => {
-    setImage(e.target.files[0]);
-    setImagePreview(URL.createObjectURL(e.target.files[0]));
-    setImagePreviewUrl(URL.createObjectURL(e.target.files[0]));
+    const selectedImage = e.target.files[0];
+    if (selectedImage) {
+      setImage(selectedImage);
+      setImagePreview(URL.createObjectURL(selectedImage));
+      setImagePreviewUrl(URL.createObjectURL(selectedImage));
+      setFilePreview(null); // Clear file preview if image is selected
+    }
   }
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    setFile(selectedFile);
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFilePreview({
+        name: selectedFile.name,
+        size: (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB',
+        type: selectedFile.type
+      });
+      setImagePreviewUrl(null); // Clear image preview if file is selected
+    }
   };
 
+  const clearPreview = () => {
+    setImagePreviewUrl(null);
+    setFilePreview(null);
+    setImage(null);
+    setFile(null);
+    setImagePreview(null);
+    if (photo.current) photo.current.value = "";
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
   return (
-    <form 
+    <form
       className='flex relative items-center w-full p-2 mb-3'
       onSubmit={sendMessage}
       encType='multipart/form-data'
     >
       {/* for sending files */}
-      {/* <div>
+      <div>
         <Tooltip content="Send File">
           <FaFile
             onClick={handleFileSend}
-            className={`cursor-pointer ${isDarkMode ? 'text-gray-500' : ''} mr-2 text-2xl`} 
+            className={`cursor-pointer ${isDarkMode ? 'text-gray-500' : ''} mr-2 text-2xl`}
           />
         </Tooltip>
         <input type="file" name='file' hidden ref={fileRef} onChange={handleFileChange} />
-      </div> */}
+      </div>
 
       {/* for sending images */}
       <div>
         <Tooltip content="Send Image">
           <FaImage
             onClick={handleImageSend}
-            className={`cursor-pointer ${isDarkMode ? 'text-gray-500' : ''} mr-2 text-2xl`} 
+            className={`cursor-pointer ${isDarkMode ? 'text-gray-500' : ''} mr-2 text-2xl`}
           />
         </Tooltip>
         <input type="file" name='image' hidden ref={photo} onChange={handleImage} />
@@ -73,16 +96,16 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
       {/* for sending emoji */}
       <div>
         <Tooltip content="Add Emoji">
-          <FaSmile 
+          <FaSmile
             className={`cursor-pointer ${isDarkMode ? 'text-gray-500' : ''} mr-2 text-2xl`}
-            onClick={toggleEmogiPicker} 
+            onClick={toggleEmogiPicker}
           />
         </Tooltip>
         {/* Emoji Picker */}
         {showEmojiPicker && (
-        <div className={`absolute bottom-14 left-1 z-10 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-lg`}>
-            <EmojiPicker theme={isDarkMode ? 'dark' : 'light'} onEmojiClick = {onClickEmogi} />
-        </div>
+          <div className={`absolute bottom-14 left-1 z-10 ${isDarkMode ? 'bg-black' : 'bg-white'} rounded-lg`}>
+            <EmojiPicker theme={isDarkMode ? 'dark' : 'light'} onEmojiClick={onClickEmogi} />
+          </div>
         )}
       </div>
 
@@ -94,44 +117,57 @@ const MessageInput = ({sendMessage,newMessage,typingHandler,setNewMessage,setIma
         onChange={typingHandler}
         className={`flex-1  px-2 py-3 text-[1.1rem] outline-none rounded-3xl ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-black border border-gray-400'}`}
       />
-        
+
       {/* Send Button */}
       <button
         className={`ml-2 p-2 rounded-full ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'} text-white`}
         type='submit'
       >
-        <IoSend className='text-xl'/>
+        <IoSend className='text-xl' />
       </button>
 
-      {imagePreviewUrl && (
+      {(imagePreviewUrl || filePreview) && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 flex justify-center items-center"
         >
-          <div className={`relative bg-black p-4 rounded-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <img
-              src={imagePreviewUrl}
-              alt="Preview"
-              className="max-w-full max-h-80 object-cover rounded-xl p-1 mt-2"
-            />
+          <div className={`relative bg-black p-4 rounded-2xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} min-w-[300px]`}>
+            {imagePreviewUrl ? (
+              <img
+                src={imagePreviewUrl}
+                alt="Preview"
+                className="max-w-full max-h-80 object-cover rounded-xl p-1 mt-2 mx-auto"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-500 rounded-xl m-2">
+                <FaFile className="text-6xl text-blue-500 mb-4" />
+                <p className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{filePreview.name}</p>
+                <p className="text-sm text-gray-400">{filePreview.size}</p>
+              </div>
+            )}
+
             <div className="absolute top-1 right-1 flex">
               <button
-                onClick={() => setImagePreviewUrl(null)} // Close modal
+                type="button"
+                onClick={clearPreview} // Close modal
                 className="text-red-600 text-xl font-bold"
               >
-                <FaTimes/>
+                <FaTimes />
               </button>
             </div>
             <div className="flex justify-between items-center mt-3 mb-0 p-2">
               <button
                 type="button"
-                onClick={() => setImagePreviewUrl(null)} // Remove the image preview
+                onClick={clearPreview} // Remove the image preview
                 className="text-red-600 text-lg"
               >
                 Remove
               </button>
               <button
                 type="button"
-                onClick={sendMessage} // Send the message with the image
+                onClick={(e) => {
+                  sendMessage(e);
+                  clearPreview();
+                }} // Send the message with the image
                 className="text-blue-600 text-lg"
               >
                 Send

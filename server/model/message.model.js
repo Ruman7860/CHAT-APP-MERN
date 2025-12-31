@@ -7,9 +7,9 @@ const messageSchema = mongoose.Schema(
     chat: { type: mongoose.Schema.Types.ObjectId, ref: "Chat" },
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     image: { type: String }, // URL or path to the image
-
-    // file: { type: String },  // URL or path to the file
-    // fileType: { type: String }, // (optional) File type for files
+    file: { type: String },  // URL or path to the file
+    fileName: { type: String }, // Original name of the file
+    fileType: { type: String }, // (optional) File type for files
   },
   { timestamps: true }
 );

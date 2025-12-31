@@ -7,6 +7,7 @@ import Tooltip from '../../utils/Tooltip';
 import { FaFile, FaTimes, FaFileExcel, FaDownload } from 'react-icons/fa';
 import ImagePreview from '../miscellaneous/ImagePreview';
 import { MdDelete } from 'react-icons/md';
+import MessageLoader from '../../utils/MessageLoader';
 
 const Messages = ({ messages, setMessages }) => {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -128,6 +129,7 @@ const Messages = ({ messages, setMessages }) => {
               }`
             }
           >
+            {msg.isLoading && <MessageLoader />}
             {
               msg.image &&
               <img

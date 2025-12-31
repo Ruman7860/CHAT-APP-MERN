@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from 'react'
-import { useChat } from '../../context/ChatContext'
+import React, { useEffect, useState } from 'react';
+import { useChat } from '../../context/ChatContext';
 import ChatHeader from './ChatHeader';
-import ScrollableFeed from 'react-scrollable-feed'
+import ScrollableFeed from 'react-scrollable-feed';
 import Lottie from 'react-lottie';
 import MessageInput from './MessageInput';
 import Messages from './Messages';
 import axios from 'axios';
-import io from 'socket.io-client'
+import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import animationData from '../../animation/typingAnimation.json';
 import Spinner from '../../animation/Spinner.json';
 import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
-const ENDPOINT = "http://localhost:3000"; // backend endpoint
-// const ENDPOINT = "https://chat-app-mern-backend-0e7i.onrender.com"; // backend endpoint
+const ENDPOINT = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -28,25 +27,22 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Global upload spinner (kept for backward compatibility)
+
   const { id } = useSelector((state) => state.user);
 
   const defaultOptions = {
     loop: true,
     autoplay: true,
     animationData: animationData,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
+    rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
   };
 
   const defaultOptionsSpinner = {
     loop: true,
     autoplay: true,
     animationData: Spinner,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
+    rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
   };
 
   const sendMessage = async (e) => {
@@ -59,17 +55,44 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     socket.emit('stop-typing', selectedChat._id);
 
+    // Create temporary optimistic message
+    const tempId = `temp-${Date.now()}`;
+    const hasMedia = !!(image || file);
+
+    const optimisticMessage = {
+      _id: tempId,
+      sender: { _id: id },
+      content: newMessage.trim(),
+      chat: selectedChat,
+      createdAt: new Date().toISOString(),
+      isLoading: hasMedia, // Only show loader if media is being uploaded
+      // For preview during upload
+      image: image ? URL.createObjectURL(image) : null,
+      file: file ? {
+        name: file.name,
+        type: file.type,
+        fileName: file.name
+      } : null,
+      fileType: file?.type,
+      fileName: file?.name,
+    };
+
+    // Add optimistic message immediately
+    setMessages((prev) => [...prev, optimisticMessage]);
+
+    // Clear input
+    setNewMessage('');
+    setImage(null);
+    setFile(null);
+    setImagePreview(null);
+
+    // Prepare form data
     const formData = new FormData();
-    formData.append('content', newMessage);
+    formData.append('content', newMessage.trim());
     formData.append('chatId', selectedChat._id);
-    if (image) {
-      setLoading(true);
-      formData.append('file', image);
-    }
-    if (file) {
-      setLoading(true);
-      console.log(file);
-      formData.append('file', file);
+    if (image || file) {
+      formData.append('file', image || file);
+      setLoading(true); // Keep your global spinner if needed
     }
 
     try {
@@ -78,158 +101,162 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         formData,
         {
           withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data', },
+          headers: { 'Content-Type': 'multipart/form-data' },
         }
       );
-      setLoading(false);
-      setNewMessage('');
-      setImage(null);
-      setFile(null);
-      setImagePreview(null); // Clear the preview after sending
+
+      // Replace temp message with real one
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === tempId ? res.data.data : msg
+        )
+      );
+
+      // Emit to others
       socket.emit('new-message', res.data.data);
-      // setMessages([...messages,res.data.data]);
-      setMessages((prevMessages) => [...prevMessages, res.data.data]);
     } catch (error) {
-      console.log("error :", error.message);
-      return;
+      console.error("Send message error:", error);
+      toast.error("Failed to send message");
+
+      // Remove failed message on error
+      setMessages((prev) => prev.filter((msg) => msg._id !== tempId));
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const fetchMessages = async () => {
-    if (!selectedChat) {
-      return;
-    }
+    if (!selectedChat) return;
 
     try {
-      const res = await axios.get(`${backendURL}/api/v1/messages/${selectedChat._id}`, { withCredentials: true });
+      const res = await axios.get(
+        `${backendURL}/api/v1/messages/${selectedChat._id}`,
+        { withCredentials: true }
+      );
 
       setMessages(res.data.data);
-      // loggedIn user room join or chat krne ke lia
       socket.emit('join-chat', selectedChat._id);
     } catch (error) {
-      console.log("error :", error.message);
-      return;
+      console.error("Fetch messages error:", error);
     }
-  }
+  };
 
+  // Socket setup
   useEffect(() => {
-    socket = io(ENDPOINT, { withCredentials: true, transports: ['websocket'] });
+    socket = io(ENDPOINT, {
+      withCredentials: true,
+      transports: ['websocket'],
+    });
+
     socket.emit('setup', id);
-    socket.on("connected", () => setSocketConnected(true));
+    socket.on('connected', () => setSocketConnected(true));
     socket.on('typing', () => setIsTyping(true));
     socket.on('stop-typing', () => setIsTyping(false));
-  }, [])
 
+    return () => {
+      socket.disconnect();
+    };
+  }, [id]);
+
+  // Receive new messages
   useEffect(() => {
-    socket.on("message-recieved", (newMessageRecieved) => {
-      if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
-        if (!notifications.some((notif) => notif._id === newMessageRecieved._id)) {
+    socket.on('message-recieved', (newMessageRecieved) => {
+      if (
+        !selectedChatCompare ||
+        selectedChatCompare._id !== newMessageRecieved.chat._id
+      ) {
+        // Notification logic
+        if (!notifications.some((n) => n._id === newMessageRecieved._id)) {
           setNotifications([newMessageRecieved, ...notifications]);
           setFetchAgain(!fetchAgain);
         }
       } else {
-        setMessages((prevMessages) => {
-          if (!prevMessages.some((msg) => msg._id === newMessageRecieved._id)) {
-            return [...prevMessages, newMessageRecieved];
+        // Add to current chat if not duplicate
+        setMessages((prev) => {
+          if (!prev.some((m) => m._id === newMessageRecieved._id)) {
+            return [...prev, newMessageRecieved];
           }
-          return prevMessages;
+          return prev;
         });
-        setFetchAgain(!fetchAgain);
       }
     });
-  }, [])
 
+    return () => socket.off('message-recieved');
+  }, [selectedChatCompare, notifications, fetchAgain, setNotifications, setFetchAgain]);
+
+  // Fetch messages when chat changes
   useEffect(() => {
     fetchMessages();
-    selectedChatCompare = selectedChat
+    selectedChatCompare = selectedChat;
   }, [selectedChat]);
 
-
+  // Typing handler
   const typingHandler = (e) => {
-    setNewMessage(e.target.value);
+    const value = e.target.value;
+    setNewMessage(value);
 
-    if (!e.target.value) {
-      // If the input is cleared, emit 'stop-typing' immediately
-      socket.emit("stop-typing", selectedChat._id);
+    if (!value.trim()) {
+      socket.emit('stop-typing', selectedChat._id);
       setTyping(false);
       return;
     }
+
     if (!socketConnected) return;
 
     if (!typing) {
       setTyping(true);
-      socket.emit("typing", selectedChat._id);
+      socket.emit('typing', selectedChat._id);
     }
-    let lastTypingTime = new Date().getTime();
-    var timerLength = 3000;
 
-    // Remove previous timeout if there is any
-    clearTimeout(window.typingTimeout);
+    // Clear previous timeout
+    if (window.typingTimeout) clearTimeout(window.typingTimeout);
 
-    // Set a new timeout to stop typing if user stops typing for 3 seconds
     window.typingTimeout = setTimeout(() => {
-      const timeNow = new Date().getTime();
-      const timeDiff = timeNow - lastTypingTime;
+      socket.emit('stop-typing', selectedChat._id);
+      setTyping(false);
+    }, 3000);
+  };
 
-      if (timeDiff >= timerLength) {
-        socket.emit("stop-typing", selectedChat._id);
-        setTyping(false);
-      }
-    }, timerLength);
+  if (!selectedChat) {
+    return (
+      <div className='flex justify-center items-center h-screen'>
+        <p className='text-xl text-gray-500'>Click on a user to start chatting</p>
+      </div>
+    );
   }
 
   return (
     <>
-      {!loading ? (
-        selectedChat ? (
-          <div className='flex flex-col h-screen'>
-            <ChatHeader fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} fetchMessages={fetchMessages} />
+      <div className='flex flex-col h-screen'>
+        <ChatHeader
+          fetchAgain={fetchAgain}
+          setFetchAgain={setFetchAgain}
+          fetchMessages={fetchMessages}
+        />
 
-            {/* Main Chat Box */}
-            <ScrollableFeed className='flex-1'>
-              <Messages messages={messages} setMessages={setMessages} />
-            </ScrollableFeed>
-            {isTyping && (
-              <div className="mt-auto mb-0">
-                <Lottie
-                  options={defaultOptions}
-                  width={70}
-                  style={{ marginBottom: 0, marginLeft: 0 }}
-                />
-              </div>
-            )}
+        <ScrollableFeed className='flex-1'>
+          <Messages messages={messages} setMessages={setMessages} />
+        </ScrollableFeed>
 
-            {/* MessageInput */}
-            <MessageInput
-              sendMessage={sendMessage}
-              newMessage={newMessage}
-              typingHandler={typingHandler}
-              setNewMessage={setNewMessage}
-              setImage={setImage}
-              image={image}
-              imagePreview={imagePreview}
-              setImagePreview={setImagePreview}
-              file={file}
-              setFile={setFile}
-            />
+        {isTyping && (
+          <div className="p-2">
+            <Lottie options={defaultOptions} width={70} style={{ margin: 0 }} />
           </div>
-        ) : (
-          <div className='flex justify-center items-center h-screen'>
-            <p className='text-xl'>Click on user to start chatting </p>
-          </div>
-        )
-      ) : (
-        <div className='fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center'>
-          <Lottie
-            options={defaultOptionsSpinner}
-            width={100}
-            height={100}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-          />
-        </div>
-      )}
+        )}
+
+        <MessageInput
+          sendMessage={sendMessage}
+          newMessage={newMessage}
+          typingHandler={typingHandler}
+          setNewMessage={setNewMessage}
+          setImage={setImage}
+          setImagePreview={setImagePreview}
+          imagePreview={imagePreview}
+          setFile={setFile}
+        />
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default SingleChat
+export default SingleChat;

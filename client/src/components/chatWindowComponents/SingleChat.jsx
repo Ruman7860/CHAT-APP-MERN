@@ -1,24 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useChat } from '../../context/ChatContext';
+import { useVideoCall } from '../../context/VideoCallContext'; // Import hook
 import ChatHeader from './ChatHeader';
 import ScrollableFeed from 'react-scrollable-feed';
 import Lottie from 'react-lottie';
 import MessageInput from './MessageInput';
 import Messages from './Messages';
 import axios from 'axios';
-import io from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import animationData from '../../animation/typingAnimation.json';
-import Spinner from '../../animation/Spinner.json';
-import { useTheme } from '../../context/ThemeContext';
 import toast from 'react-hot-toast';
 
 const ENDPOINT = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-var socket, selectedChatCompare;
+// Socket is now managed in Context, no global var here needed ideally, 
+// but we used to have 'selectedChatCompare' used in effect.
+var selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
-  const { selectedChat, notifications, setNotifications } = useChat();
+  const { selectedChat, notifications, setNotifications, socket } = useChat(); // Get socket from context
+  const { startCall } = useVideoCall(); // Get call function
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [socketConnected, setSocketConnected] = useState(false);
@@ -27,7 +29,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false); // Global upload spinner (kept for backward compatibility)
+  const [loading, setLoading] = useState(false);
 
   const { id } = useSelector((state) => state.user);
 
@@ -35,13 +37,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     loop: true,
     autoplay: true,
     animationData: animationData,
-    rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
-  };
-
-  const defaultOptionsSpinner = {
-    loop: true,
-    autoplay: true,
-    animationData: Spinner,
     rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
   };
 
@@ -53,7 +48,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       return;
     }
 
-    socket.emit('stop-typing', selectedChat._id);
+    if (socket) {
+      socket.emit('stop-typing', selectedChat._id);
+    }
 
     // Create temporary optimistic message
     const tempId = `temp-${Date.now()}`;
@@ -65,8 +62,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       content: newMessage.trim(),
       chat: selectedChat,
       createdAt: new Date().toISOString(),
-      isLoading: hasMedia, // Only show loader if media is being uploaded
-      // For preview during upload
+      isLoading: hasMedia,
       image: image ? URL.createObjectURL(image) : null,
       file: file ? {
         name: file.name,
@@ -77,7 +73,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       fileName: file?.name,
     };
 
-    // Add optimistic message immediately
     setMessages((prev) => [...prev, optimisticMessage]);
 
     // Clear input
@@ -86,13 +81,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     setFile(null);
     setImagePreview(null);
 
-    // Prepare form data
     const formData = new FormData();
     formData.append('content', newMessage.trim());
     formData.append('chatId', selectedChat._id);
     if (image || file) {
       formData.append('file', image || file);
-      setLoading(true); // Keep your global spinner if needed
+      setLoading(true);
     }
 
     try {
@@ -105,20 +99,18 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         }
       );
 
-      // Replace temp message with real one
       setMessages((prev) =>
         prev.map((msg) =>
           msg._id === tempId ? res.data.data : msg
         )
       );
 
-      // Emit to others
-      socket.emit('new-message', res.data.data);
+      if (socket) {
+        socket.emit('new-message', res.data.data);
+      }
     } catch (error) {
       console.error("Send message error:", error);
       toast.error("Failed to send message");
-
-      // Remove failed message on error
       setMessages((prev) => prev.filter((msg) => msg._id !== tempId));
     } finally {
       setLoading(false);
@@ -135,43 +127,46 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       );
 
       setMessages(res.data.data);
-      socket.emit('join-chat', selectedChat._id);
+      if (socket) {
+        socket.emit('join-chat', selectedChat._id);
+      }
     } catch (error) {
       console.error("Fetch messages error:", error);
     }
   };
 
-  // Socket setup
+  // Socket setup is now handled globally in VideoCallContext/App
+  // We just listen to events when socket is ready.
   useEffect(() => {
-    socket = io(ENDPOINT, {
-      withCredentials: true,
-      transports: ['websocket'],
-    });
+    if (!socket) return;
 
-    socket.emit('setup', id);
-    socket.on('connected', () => setSocketConnected(true));
+    // We assume 'setup' event was called by Manager context
+    setSocketConnected(true);
+
     socket.on('typing', () => setIsTyping(true));
     socket.on('stop-typing', () => setIsTyping(false));
 
     return () => {
-      socket.disconnect();
+      // Don't disconnect socket here as it's global now!
+      socket.off('typing');
+      socket.off('stop-typing');
     };
-  }, [id]);
+  }, [socket]);
 
   // Receive new messages
   useEffect(() => {
+    if (!socket) return;
+
     socket.on('message-recieved', (newMessageRecieved) => {
       if (
         !selectedChatCompare ||
         selectedChatCompare._id !== newMessageRecieved.chat._id
       ) {
-        // Notification logic
         if (!notifications.some((n) => n._id === newMessageRecieved._id)) {
           setNotifications([newMessageRecieved, ...notifications]);
           setFetchAgain(!fetchAgain);
         }
       } else {
-        // Add to current chat if not duplicate
         setMessages((prev) => {
           if (!prev.some((m) => m._id === newMessageRecieved._id)) {
             return [...prev, newMessageRecieved];
@@ -182,21 +177,27 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     });
 
     return () => socket.off('message-recieved');
-  }, [selectedChatCompare, notifications, fetchAgain, setNotifications, setFetchAgain]);
+  }, [socket, selectedChatCompare, notifications, fetchAgain, setNotifications, setFetchAgain]);
 
-  // Fetch messages when chat changes
   useEffect(() => {
     fetchMessages();
     selectedChatCompare = selectedChat;
-  }, [selectedChat]);
+  }, [selectedChat]); // Depend on socket? fetchMessages uses socket.
 
-  // Typing handler
+  // Re-run fetchMessages if socket connects late?
+  useEffect(() => {
+    if (socket && selectedChat) {
+      socket.emit('join-chat', selectedChat._id);
+    }
+  }, [socket]);
+
+
   const typingHandler = (e) => {
     const value = e.target.value;
     setNewMessage(value);
 
     if (!value.trim()) {
-      socket.emit('stop-typing', selectedChat._id);
+      if (socket) socket.emit('stop-typing', selectedChat._id);
       setTyping(false);
       return;
     }
@@ -205,14 +206,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     if (!typing) {
       setTyping(true);
-      socket.emit('typing', selectedChat._id);
+      if (socket) socket.emit('typing', selectedChat._id);
     }
 
-    // Clear previous timeout
     if (window.typingTimeout) clearTimeout(window.typingTimeout);
 
     window.typingTimeout = setTimeout(() => {
-      socket.emit('stop-typing', selectedChat._id);
+      if (socket) socket.emit('stop-typing', selectedChat._id);
       setTyping(false);
     }, 3000);
   };
@@ -232,6 +232,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           fetchAgain={fetchAgain}
           setFetchAgain={setFetchAgain}
           fetchMessages={fetchMessages}
+          onStartVideoCall={() => startCall(selectedChat, 'video')}
+          onStartAudioCall={() => startCall(selectedChat, 'audio')}
         />
 
         <ScrollableFeed className='flex-1'>

@@ -2,19 +2,22 @@ import { createContext, useContext, useState } from "react";
 
 export const ChatContext = createContext();
 
-export const ChatContextProvider = ({children}) => {
-    const [selectedChat,setSelectedChat] = useState();
-    const [chats,setChats] = useState([]);
-    const [notifications,setNotifications] = useState([]);
+export const ChatContextProvider = ({ children }) => {
+    const [selectedChat, setSelectedChat] = useState();
+    const [chats, setChats] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [socket, setSocket] = useState(null);
 
-    return <ChatContext.Provider 
+    return <ChatContext.Provider
         value={{
             selectedChat,
             setSelectedChat,
             chats,
             setChats,
             notifications,
-            setNotifications
+            setNotifications,
+            socket,
+            setSocket
         }}
     >
         {children}
